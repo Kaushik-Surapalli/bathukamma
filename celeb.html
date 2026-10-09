@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Bathukamma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background:
+        radial-gradient(circle at 15% 10%, #be185d 0%, transparent 45%),
+        radial-gradient(circle at 85% 90%, #15803d 0%, transparent 50%),
+        linear-gradient(135deg, #4a044e 0%, #831843 40%, #14532d 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .glow-text {
+      text-shadow: 0 0 12px rgba(253, 224, 71, 0.8), 0 0 30px rgba(251, 146, 60, 0.6);
+    }
+    .bloom {
+      filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.8)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.5));
+    }
+    .photo-glow {
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), 0 0 60px rgba(236, 72, 153, 0.4);
+    }
+    .petal-fall {
+      position: fixed;
+      top: -40px;
+      pointer-events: none;
+      z-index: 0;
+      animation: fall linear infinite;
+      opacity: 0.85;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(0) rotate(0deg) translateX(0); }
+      50%  { transform: translateY(55vh) rotate(180deg) translateX(30px); }
+      100% { transform: translateY(110vh) rotate(360deg) translateX(-20px); }
+    }
+    .spark {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 50;
+      animation: burst 1s ease-out forwards;
+    }
+    @keyframes burst {
+      to { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
+    }
+    .sway { animation: sway 6s ease-in-out infinite; }
+    @keyframes sway {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .petal-fall, .sway { animation: none; }
+    }
+  </style>
+</head>
+<body class="text-white font-sans">
+
+  <!-- Floating petals container (populated by script) -->
+  <div id="petals"></div>
+
+  <!-- Top photo -->
+  <header class="relative z-10 px-4 pt-6 sm:px-8 sm:pt-10">
+    <img 
+      src="IMG-20261009-WA0008.jpg"
+      width="1080" height="653"
+      alt="Department of Data Science Bathukamma celebration"
+      class="photo-glow mx-auto block w-full max-w-4xl rounded-2xl border-4 border-amber-300/80 object-contain"
+    />
+  </header>
+
+  <main class="relative z-10 flex flex-col items-center justify-center gap-10 px-5 py-12 text-center lg:flex-row lg:gap-16 lg:px-16 lg:text-left">
+
+    <section class="max-w-xl">
+      <p class="mb-4 text-xs uppercase tracking-[0.3em] text-amber-300 sm:text-sm">
+        A festival of colours, faith &amp; sisterhood
+      </p>
+      <h1 class="glow-text text-3xl font-extrabold leading-tight text-amber-200 sm:text-5xl lg:text-6xl">
+        Department of Data Science wishes you an Auspicious Happy Bathukamma
+      </h1>
+      <p class="mt-6 text-base leading-relaxed text-pink-100/90 sm:text-lg">
+        May the golden glow of marigolds, the blush of pink blossoms and the green of new leaves
+        fill your days with joy, prosperity and togetherness.
+      </p>
+      <button id="celebrate"
+        class="mt-8 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 px-8 py-3 font-bold text-white shadow-lg shadow-orange-500/40 transition hover:scale-105 hover:shadow-pink-500/60 active:scale-95">
+        ✨ Celebrate ✨
+      </button>
+    </section>
+
+    <section class="relative w-64 shrink-0 sm:w-80 lg:w-[26rem]">
+      <svg id="bathukamma" viewBox="0 0 200 240" class="sway bloom h-auto w-full" aria-label="Stylized Bathukamma flower arrangement">
+        <defs>
+          <radialGradient id="gold" cx="50%" cy="30%" r="70%">
+            <stop offset="0" stop-color="#fef08a" />
+            <stop offset="0.5" stop-color="#fb923c" />
+            <stop offset="1" stop-color="#ea580c" />
+          </radialGradient>
+          <radialGradient id="pink" cx="50%" cy="30%" r="70%">
+            <stop offset="0" stop-color="#fdf2f8" />
+            <stop offset="0.5" stop-color="#f472b6" />
+            <stop offset="1" stop-color="#be185d" />
+          </radialGradient>
+          <linearGradient id="leaf" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#14532d" />
+            <stop offset="0.5" stop-color="#16a34a" />
+            <stop offset="1" stop-color="#86efac" />
+          </linearGradient>
+        </defs>
+        <g id="scene"></g>
+      </svg>
+    </section>
+  </main>
+
+  <script>
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.getElementById("bathukamma");
+    const scene = document.getElementById("scene");
+
+    // Petal path pointing up from origin (0,0)
+    const petalPath = (L, W) =>
+      `M0,0 C${-W},${-L * 0.3} ${-W * 0.9},${-L * 0.8} 0,${-L} C${W * 0.9},${-L * 0.8} ${W},${-L * 0.3} 0,0Z`;
+
+    const el = (tag, attrs, parent) => {
+      const node = document.createElementNS(NS, tag);
+      for (const k in attrs) node.setAttribute(k, attrs[k]);
+      parent.appendChild(node);
+      return node;
+    };
+
+    // Leaves beneath the arrangement
+    const leafGroup = el("g", {}, scene);
+    [-80, -50, -22, 22, 50, 80].forEach((a) => {
+      el("path", {
+        d: petalPath(58, 13),
+        fill: "url(#leaf)",
+        transform: `translate(100 212) rotate(${a})`,
+        opacity: 0.95
+      }, leafGroup);
+    });
+
+    // Bloom layers: [count, length, width, fill, angleOffset]
+    const layers = [
+      [12, 62, 14, "url(#gold)", 0],
+      [10, 48, 12, "url(#gold)", 18],
+      [8, 36, 11, "url(#pink)", 0],
+      [6, 22, 9, "#fde047", 30]
+    ];
+
+    function drawBloom(cx, cy, k) {
+      const g = el("g", {}, scene);
+      layers.forEach(([n, L, W, fill, off]) => {
+        for (let i = 0; i < n; i++) {
+          const a = (360 / n) * i + off;
+          el("path", {
+            d: petalPath(L, W),
+            fill,
+            stroke: "rgba(255,255,255,0.25)",
+            "stroke-width": 0.6,
+            transform: `translate(${cx} ${cy}) rotate(${a}) scale(${k})`
+          }, g);
+        }
+      });
+      // Centre disc with seed dots
+      el("circle", { cx, cy, r: 11 * k, fill: "#facc15", stroke: "#a16207", "stroke-width": 1 }, g);
+      for (let i = 0; i < 10; i++) {
+        const a = ((Math.PI * 2) / 10) * i;
+        el("circle", {
+          cx: cx + Math.cos(a) * 5 * k,
+          cy: cy + Math.sin(a) * 5 * k,
+          r: 1.4 * k,
+          fill: "#78350f"
+        }, g);
+      }
+    }
+
+    // Side blooms first (behind), then the main crown
+    drawBloom(58, 170, 0.55);
+    drawBloom(142, 170, 0.55);
+    drawBloom(100, 118, 1);
+
+    // Floating petals
+    const petalsWrap = document.getElementById("petals");
+    const petalColors = [
+      "linear-gradient(135deg,#fde047,#fb923c)",
+      "linear-gradient(135deg,#fbcfe8,#ec4899)",
+      "linear-gradient(135deg,#bbf7d0,#22c55e)"
+    ];
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement("div");
+      p.className = "petal-fall";
+      const size = 12 + Math.random() * 12;
+      p.style.width = size + "px";
+      p.style.height = size + "px";
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.background = petalColors[i % petalColors.length];
+      p.style.borderRadius = "0 100% 0 100%";
+      p.style.animationDuration = 8 + Math.random() * 8 + "s";
+      p.style.animationDelay = -Math.random() * 15 + "s";
+      petalsWrap.appendChild(p);
+    }
+
+    // Confetti / sparkle burst on button click
+    const btn = document.getElementById("celebrate");
+    const sparkColors = ["#fde047", "#fb923c", "#f472b6", "#4ade80", "#ffffff"];
+
+    btn.addEventListener("click", () => {
+      const r = btn.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+
+      for (let i = 0; i < 45; i++) {
+        const s = document.createElement("span");
+        s.className = "spark";
+        const size = 5 + Math.random() * 8;
+        s.style.width = size + "px";
+        s.style.height = size + "px";
+        s.style.left = cx - size / 2 + "px";
+        s.style.top = cy - size / 2 + "px";
+        s.style.background = sparkColors[Math.floor(Math.random() * sparkColors.length)];
+        s.style.setProperty("--x", (Math.random() - 0.5) * 320 + "px");
+        s.style.setProperty("--y", (Math.random() - 0.5) * 320 + "px");
+        s.style.animationDuration = 0.7 + Math.random() * 0.6 + "s";
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 1400);
+      }
+
+      // Spin the flower for extra delight
+      svg.animate(
+        [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+        { duration: 1000, easing: "ease-in-out" }
+      );
+    });
+  </script>
+</body>
+</html>
